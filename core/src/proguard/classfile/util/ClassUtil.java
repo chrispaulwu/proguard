@@ -224,6 +224,19 @@ public class ClassUtil
             externalArrayType;
     }
 
+    /**
+     * Returns the internal short class name of an internal class name, dropping
+     * the package specification.
+     * @param internalClassName the external class name,
+     *                          e.g. "<code>java/lang/Object</code>"
+     * @return the internal short class name,
+     *                          e.g. "<code>Object</code>".
+     */
+    public static String internalShortClassName(String internalClassName)
+    {
+        int index = internalClassName.lastIndexOf(ClassConstants.PACKAGE_SEPARATOR);
+        return internalClassName.substring(index+1);
+    }
 
     /**
      * Returns the external short class name of an external class name, dropping

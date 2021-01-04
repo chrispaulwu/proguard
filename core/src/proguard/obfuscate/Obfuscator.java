@@ -210,10 +210,78 @@ public class Obfuscator
 
                 err.println("         (http://proguard.sourceforge.net/manual/troubleshooting.html#mappingconflict1)");
 
-                if (!configuration.ignoreWarnings)
-                {
-                    throw new IOException("Please correct the above warnings first.");
-                }
+                // if (!configuration.ignoreWarnings)
+                // {
+                //     throw new IOException("Please correct the above warnings first.");
+                // }
+            }
+
+            // Fix any package conflicts.
+            final ClassPool[] classPools = {programClassPool, libraryClassPool};
+            // original internal package prefix -> [kept class external name ...]
+            final Map<String, Set<String>> keptClassesMemo = new HashMap<>();
+            for (ClassPool classPool : classPools) {
+                classPool.classesAccept(new ClassVisitor() {
+                    @Override
+                    public void visitProgramClass(ProgramClass programClass) {
+                        collectPkgKeptClasses(programClass);
+                    }
+
+                    @Override
+                    public void visitLibraryClass(LibraryClass libraryClass) {
+                        collectPkgKeptClasses(libraryClass);
+                    }
+
+                    private void collectPkgKeptClasses(Clazz clazz) {
+                        final String internalClassName = clazz.getName();
+                        final String appliedInternalClassName = ClassObfuscator.newClassName(clazz);
+                        if (appliedInternalClassName != null) {
+                            final String origPkgPrefix = ClassUtil.internalPackagePrefix(internalClassName);
+                            final String keptPkgPrefix = ClassUtil.internalPackagePrefix(appliedInternalClassName);
+                            if (origPkgPrefix.equals(keptPkgPrefix)) {
+                                Set<String> keptClassNames = keptClassesMemo.get(origPkgPrefix);
+                                if (keptClassNames == null) {
+                                    keptClassNames = new HashSet<>();
+                                    keptClassesMemo.put(origPkgPrefix, keptClassNames);
+                                }
+                                keptClassNames.add(ClassUtil.externalClassName(internalClassName));
+                            }
+                        }
+                    }
+                });
+            }
+            for (ClassPool classPool : classPools) {
+                classPool.classesAccept(new ClassVisitor() {
+                    @Override
+                    public void visitProgramClass(ProgramClass programClass) {
+                        fixPackageName(programClass);
+                    }
+
+                    @Override
+                    public void visitLibraryClass(LibraryClass libraryClass) {
+                        fixPackageName(libraryClass);
+                    }
+
+                    private void fixPackageName(Clazz clazz) {
+                        final String origInternalClassName = clazz.getName();
+                        final String appliedInternalClassName = ClassObfuscator.newClassName(clazz);
+                        if (appliedInternalClassName != null) {
+                            final String origPkgPrefix = ClassUtil.internalPackagePrefix(origInternalClassName);
+                            if (keptClassesMemo.containsKey(origPkgPrefix)) {
+                                final String fixedInternalClassName = origPkgPrefix + ClassUtil.internalShortClassName(appliedInternalClassName);
+                                if (!fixedInternalClassName.equals(appliedInternalClassName)) {
+                                    ClassObfuscator.setNewClassName(clazz, fixedInternalClassName);
+                                    final String origExternalClassName = ClassUtil.externalClassName(origInternalClassName);
+                                    final String appliedExternalClassName = ClassUtil.externalClassName(appliedInternalClassName);
+                                    final String fixedExternalClassName = ClassUtil.externalClassName(fixedInternalClassName);
+                                    System.out.println(String.format("Note: class '%s(%s)' was adjusted to '%s'\n"
+                                        + " due to following class(es) cause package name being kept:\n    %s", 
+                                        appliedExternalClassName, origExternalClassName, fixedExternalClassName, keptClassesMemo.get(origPkgPrefix)));
+                                }
+                            }
+                        }
+                    }
+                });
             }
         }
 
@@ -442,17 +510,17 @@ public class Obfuscator
         int warningCount = warningPrinter.getWarningCount();
         if (warningCount > 0)
         {
-            err.println("Warning: there were " + warningCount +
+            System.err.println("Warning: there were " + warningCount +
                                " conflicting class member name mappings.");
-            err.println("         Your configuration may be inconsistent.");
+            System.err.println("         Your configuration may be inconsistent.");
 
             if (!configuration.ignoreWarnings)
             {
-                err.println("         If you are sure the conflicts are harmless,");
-                err.println("         you could try your luck using the '-ignorewarnings' option.");
+                System.err.println("         If you are sure the conflicts are harmless,");
+                System.err.println("         you could try your luck using the '-ignorewarnings' option.");
             }
 
-            err.println("         (http://proguard.sourceforge.net/manual/troubleshooting.html#mappingconflict2)");
+            System.err.println("         (http://proguard.sourceforge.net/manual/troubleshooting.html#mappingconflict2)");
 
             if (!configuration.ignoreWarnings)
             {
