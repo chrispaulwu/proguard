@@ -301,7 +301,7 @@ implements   ClassVisitor
                     inSamePackage(programClass, referencingClass) ? AccessUtil.PACKAGE_VISIBLE :
                     (referencingMethodAccessFlags & ClassConstants.ACC_STATIC) == 0 &&
                     (referencedClass == null ||
-                     referencedClass.extends_(referencingClass))                    &&
+                     referencingClass.extends_(referencedClass))                    &&
                     referencingClass.extends_(programClass)       ? AccessUtil.PROTECTED       :
                                                                     AccessUtil.PUBLIC;
 
