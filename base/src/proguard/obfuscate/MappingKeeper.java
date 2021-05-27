@@ -53,7 +53,6 @@ public class MappingKeeper implements MappingProcessor
         this.warningPrinter = warningPrinter;
     }
 
-
     // Implementations for MappingProcessor.
 
     public boolean processClassMapping(String className,
@@ -66,23 +65,35 @@ public class MappingKeeper implements MappingProcessor
         if (clazz != null)
         {
             String newName = ClassUtil.internalClassName(newClassName);
-
-            // Print out a warning if the mapping conflicts with a name that
-            // was set before.
-            if (warningPrinter != null)
+            String currentNewName = ClassObfuscator.newClassName(clazz);
+            if (currentNewName != null &&
+                !currentNewName.equals(newName))
             {
-                String currentNewName = ClassObfuscator.newClassName(clazz);
-                if (currentNewName != null &&
-                    !currentNewName.equals(newName))
+                boolean useKeptName = false;
+
+                // Use kept name if we met conflict and what we are 
+                // processing is not tinker loader class. Otherwise we 
+                // should still use remapped name.
+                if (!className.startsWith("com.tencent.tinker.loader.")) {
+                    useKeptName = true;
+                }
+
+                // Print out a warning if the mapping conflicts with a name that
+                // was set before.
+                if (warningPrinter != null)
                 {
-                    warningPrinter.print(name,
-                                         currentNewName,
-                                         "Warning: " +
-                                         className +
-                                         " is not being kept as '" +
-                                         ClassUtil.externalClassName(currentNewName) +
-                                         "', but remapped to '" +
-                                         newClassName + "'");
+                        warningPrinter.print(name,
+                                             currentNewName,
+                                             "Note: " +
+                                             className +
+                                             " is not being kept as '" +
+                                             ClassUtil.externalClassName(currentNewName) +
+                                             "', but remapped to '" +
+                                             newClassName + "'" + ", the " + (useKeptName ? "kept" : "remapped") + " name '" + currentNewName + "' will be used.");
+                }
+
+                if (useKeptName) {
+                    newName = currentNewName;
                 }
             }
 
@@ -111,20 +122,33 @@ public class MappingKeeper implements MappingProcessor
             Field field = clazz.findField(name, descriptor);
             if (field != null)
             {
-                // Print out a warning if the mapping conflicts with a name that
-                // was set before.
-                if (warningPrinter != null)
+                String currentNewName = MemberObfuscator.newMemberName(field);
+                if (currentNewName != null &&
+                    !currentNewName.equals(newFieldName))
                 {
-                    String currentNewName = MemberObfuscator.newMemberName(field);
-                    if (currentNewName != null &&
-                        !currentNewName.equals(newFieldName))
+                    boolean useKeptName = false;
+
+                    // Use kept name if we met conflict and what we are 
+                    // processing is not tinker loader class. Otherwise we 
+                    // should still use remapped name.
+                    if (!className.startsWith("com.tencent.tinker.loader.")) {
+                        useKeptName = true;
+                    }
+
+                    // Print out a warning if the mapping conflicts with a name that
+                    // was set before.
+                    if (warningPrinter != null)
                     {
                         warningPrinter.print(ClassUtil.internalClassName(className),
-                                             "Warning: " +
+                                             "Note: " +
                                              className +
                                              ": field '" + fieldType + " " + fieldName +
                                              "' is not being kept as '" + currentNewName +
-                                             "', but remapped to '" + newFieldName + "'");
+                                             "', but remapped to '" + newFieldName + "'" + ", the " + (useKeptName ? "kept" : "remapped") + " name '" + currentNewName + "' will be used.");
+                    }
+
+                    if (useKeptName) {
+                        newFieldName = currentNewName;
                     }
                 }
 
@@ -155,20 +179,33 @@ public class MappingKeeper implements MappingProcessor
             Method method = clazz.findMethod(methodName, descriptor);
             if (method != null)
             {
-                // Print out a warning if the mapping conflicts with a name that
-                // was set before.
-                if (warningPrinter != null)
+                String currentNewName = MemberObfuscator.newMemberName(method);
+                if (currentNewName != null &&
+                    !currentNewName.equals(newMethodName))
                 {
-                    String currentNewName = MemberObfuscator.newMemberName(method);
-                    if (currentNewName != null &&
-                        !currentNewName.equals(newMethodName))
+                    boolean useKeptName = false;
+                    
+                    // Use kept name if we met conflict and what we are 
+                    // processing is not tinker loader class. Otherwise we 
+                    // should still use remapped name.
+                    if (!className.startsWith("com.tencent.tinker.loader.")) {
+                        useKeptName = true;
+                    }
+
+                    // Print out a warning if the mapping conflicts with a name that
+                    // was set before.
+                    if (warningPrinter != null)
                     {
                         warningPrinter.print(ClassUtil.internalClassName(className),
-                                             "Warning: " +
+                                             "Note: " +
                                              className +
                                              ": method '" + methodReturnType + " " + methodName + JavaTypeConstants.METHOD_ARGUMENTS_OPEN + methodArguments + JavaTypeConstants.METHOD_ARGUMENTS_CLOSE +
                                              "' is not being kept as '" + currentNewName +
-                                             "', but remapped to '" + newMethodName + "'");
+                                             "', but remapped to '" + newMethodName + "'" + ", the " + (useKeptName ? "kept" : "remapped") + " name '" + currentNewName + "' will be used.");
+                    }
+
+                    if (useKeptName) {
+                        newMethodName = currentNewName;
                     }
                 }
 

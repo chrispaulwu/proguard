@@ -261,10 +261,10 @@ public class Obfuscator
 
                 err.println("         (https://www.guardsquare.com/proguard/manual/troubleshooting#mappingconflict1)");
 
-                if (!configuration.ignoreWarnings)
-                {
-                    throw new IOException("Please correct the above warnings first.");
-                }
+                // if (!configuration.ignoreWarnings)
+                // {
+                //     throw new IOException("Please correct the above warnings first.");
+                // }
             }
         }
 

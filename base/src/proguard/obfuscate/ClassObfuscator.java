@@ -323,8 +323,7 @@ implements   ClassVisitor,
                 classNamesToAvoid.add(mixedCaseClassName(newClassName));
 
                 // Are we not aggressively repackaging all obfuscated classes?
-                if (repackageClasses == null ||
-                    !allowAccessModification)
+                if (repackageClasses == null)
                 {
                     String className = programClass.getName();
 
@@ -353,8 +352,7 @@ implements   ClassVisitor,
             classNamesToAvoid.add(mixedCaseClassName(newClassName));
 
             // Are we not aggressively repackaging all obfuscated classes?
-            if (repackageClasses == null ||
-                !allowAccessModification)
+            if (repackageClasses == null)
             {
                 String className = libraryClass.getName();
 
