@@ -53,6 +53,9 @@ public class MappingKeeper implements MappingProcessor
         this.warningPrinter = warningPrinter;
     }
 
+    private boolean useAppliedMappingName(String externalClassName) {
+        return externalClassName.startsWith("com.tencent.tinker.loader.");
+    }
 
     // Implementations for MappingProcessor.
 
@@ -66,27 +69,43 @@ public class MappingKeeper implements MappingProcessor
         if (clazz != null)
         {
             String newName = ClassUtil.internalClassName(newClassName);
+            String currentNewName = ClassObfuscator.newClassName(clazz);
+
+            // If class name is not kept or needs to be remapped with applied mapping, use name in mapping.
+            final boolean useAppliedMappingName = useAppliedMappingName(className) || currentNewName == null;
 
             // Print out a warning if the mapping conflicts with a name that
             // was set before.
             if (warningPrinter != null)
             {
-                String currentNewName = ClassObfuscator.newClassName(clazz);
                 if (currentNewName != null &&
                     !currentNewName.equals(newName))
                 {
-                    warningPrinter.print(name,
-                                         currentNewName,
-                                         "Warning: " +
-                                         className +
-                                         " is not being kept as '" +
-                                         ClassUtil.externalClassName(currentNewName) +
-                                         "', but remapped to '" +
-                                         newClassName + "'");
+                    if (useAppliedMappingName) {
+                        warningPrinter.print(name,
+                                             currentNewName,
+                                             "Warning: " +
+                                             className +
+                                             " is not being kept as '" +
+                                             ClassUtil.externalClassName(currentNewName) +
+                                             "', but remapped to '" +
+                                             newClassName + "', the remapped name will be used." );
+                    } else {
+                        warningPrinter.print(name,
+                                             currentNewName,
+                                             "Warning: " +
+                                             className +
+                                             " is not being kept as '" +
+                                             ClassUtil.externalClassName(currentNewName) +
+                                             "', but remapped to '" +
+                                             newClassName + "', the kept name will be used." );
+                    }
                 }
             }
 
-            ClassObfuscator.setNewClassName(clazz, newName);
+            if (useAppliedMappingName) {
+                ClassObfuscator.setNewClassName(clazz, newName);
+            }
 
             // The class members have to be kept as well.
             return true;
@@ -111,25 +130,41 @@ public class MappingKeeper implements MappingProcessor
             Field field = clazz.findField(name, descriptor);
             if (field != null)
             {
+                String currentNewName = MemberObfuscator.newMemberName(field);
+                // If member name is not kept or needs to be remapped with applied mapping, use name in mapping.
+                final boolean useAppliedMappingName = useAppliedMappingName(className) || currentNewName == null;
+
                 // Print out a warning if the mapping conflicts with a name that
                 // was set before.
                 if (warningPrinter != null)
                 {
-                    String currentNewName = MemberObfuscator.newMemberName(field);
                     if (currentNewName != null &&
                         !currentNewName.equals(newFieldName))
                     {
-                        warningPrinter.print(ClassUtil.internalClassName(className),
-                                             "Warning: " +
-                                             className +
-                                             ": field '" + fieldType + " " + fieldName +
-                                             "' is not being kept as '" + currentNewName +
-                                             "', but remapped to '" + newFieldName + "'");
+                        if (useAppliedMappingName) {
+                            warningPrinter.print(ClassUtil.internalClassName(className),
+                                                 "Warning: " +
+                                                 className +
+                                                 ": field '" + fieldType + " " + fieldName +
+                                                 "' is not being kept as '" + currentNewName +
+                                                 "', but remapped to '" + newFieldName + "', " +
+                                                 "the remapped name will be used.");
+                        } else {
+                            warningPrinter.print(ClassUtil.internalClassName(className),
+                                                 "Warning: " +
+                                                 className +
+                                                 ": field '" + fieldType + " " + fieldName +
+                                                 "' is not being kept as '" + currentNewName +
+                                                 "', but remapped to '" + newFieldName + "', " +
+                                                 "the kept name will be used.");
+                        }
                     }
                 }
 
-                // Make sure the mapping name will be kept.
-                MemberObfuscator.setFixedNewMemberName(field, newFieldName);
+                if (useAppliedMappingName) {
+                    // Make sure the mapping name will be kept.
+                    MemberObfuscator.setFixedNewMemberName(field, newFieldName);
+                }
             }
         }
     }
@@ -155,25 +190,41 @@ public class MappingKeeper implements MappingProcessor
             Method method = clazz.findMethod(methodName, descriptor);
             if (method != null)
             {
+                String currentNewName = MemberObfuscator.newMemberName(method);
+                // If member name is not kept or needs to be remapped with applied mapping, use name in mapping.
+                final boolean useAppliedMappingName = useAppliedMappingName(className) || currentNewName == null;
+
                 // Print out a warning if the mapping conflicts with a name that
                 // was set before.
                 if (warningPrinter != null)
                 {
-                    String currentNewName = MemberObfuscator.newMemberName(method);
                     if (currentNewName != null &&
                         !currentNewName.equals(newMethodName))
                     {
-                        warningPrinter.print(ClassUtil.internalClassName(className),
-                                             "Warning: " +
-                                             className +
-                                             ": method '" + methodReturnType + " " + methodName + JavaTypeConstants.METHOD_ARGUMENTS_OPEN + methodArguments + JavaTypeConstants.METHOD_ARGUMENTS_CLOSE +
-                                             "' is not being kept as '" + currentNewName +
-                                             "', but remapped to '" + newMethodName + "'");
+                        if (useAppliedMappingName) {
+                            warningPrinter.print(ClassUtil.internalClassName(className),
+                                                 "Warning: " +
+                                                 className +
+                                                 ": method '" + methodReturnType + " " + methodName + JavaTypeConstants.METHOD_ARGUMENTS_OPEN + methodArguments + JavaTypeConstants.METHOD_ARGUMENTS_CLOSE +
+                                                 "' is not being kept as '" + currentNewName +
+                                                 "', but remapped to '" + newMethodName + "', " + 
+                                                 "the remapped name will be used.");
+                        } else {
+                            warningPrinter.print(ClassUtil.internalClassName(className),
+                                                 "Warning: " +
+                                                 className +
+                                                 ": method '" + methodReturnType + " " + methodName + JavaTypeConstants.METHOD_ARGUMENTS_OPEN + methodArguments + JavaTypeConstants.METHOD_ARGUMENTS_CLOSE +
+                                                 "' is not being kept as '" + currentNewName +
+                                                 "', but remapped to '" + newMethodName + "', " + 
+                                                 "the kept name will be used.");
+                        }
                     }
                 }
 
-                // Make sure the mapping name will be kept.
-                MemberObfuscator.setFixedNewMemberName(method, newMethodName);
+                if (useAppliedMappingName) {
+                    // Make sure the mapping name will be kept.
+                    MemberObfuscator.setFixedNewMemberName(method, newMethodName);
+                }
             }
         }
     }

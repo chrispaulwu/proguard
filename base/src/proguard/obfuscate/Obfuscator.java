@@ -263,7 +263,7 @@ public class Obfuscator
 
                 if (!configuration.ignoreWarnings)
                 {
-                    throw new IOException("Please correct the above warnings first.");
+                    // throw new IOException("Please correct the above warnings first.");
                 }
             }
         }

@@ -141,6 +141,8 @@ implements   ClassVisitor,
         // Collect all names that have already been taken.
         programClassPool.classesAccept(new MyKeepCollector());
         libraryClassPool.classesAccept(new MyKeepCollector());
+        programClassPool.classesAccept(new PackageNameFixer());
+        libraryClassPool.classesAccept(new PackageNameFixer());
     }
 
 
@@ -319,8 +321,9 @@ implements   ClassVisitor,
             String newClassName = newClassName(programClass);
             if (newClassName != null)
             {
+                // tomys: Do not remember this name here since it may be modified after package name fixing. 
                 // Remember not to use this name.
-                classNamesToAvoid.add(mixedCaseClassName(newClassName));
+                // classNamesToAvoid.add(mixedCaseClassName(newClassName));
 
                 // Are we not aggressively repackaging all obfuscated classes?
                 if (repackageClasses == null ||
@@ -349,8 +352,9 @@ implements   ClassVisitor,
                 newClassName = libraryClass.getName();
             }
 
+            // tomys: Do not remember this name here since it may be modified after package name fixing. 
             // Remember not to use this name.
-            classNamesToAvoid.add(mixedCaseClassName(newClassName));
+            // classNamesToAvoid.add(mixedCaseClassName(newClassName));
 
             // Are we not aggressively repackaging all obfuscated classes?
             if (repackageClasses == null ||
@@ -384,7 +388,11 @@ implements   ClassVisitor,
             // entire hierarchy, into the package prefix map.
             do
             {
-                packagePrefixMap.put(packagePrefix, newPackagePrefix);
+                final String lastNewPackagePrefix = (String) packagePrefixMap.get(packagePrefix);
+                if (!packagePrefix.equals(lastNewPackagePrefix)) {
+                    // Avoid overriding kept package prefix with obfuscated one.
+                    packagePrefixMap.put(packagePrefix, newPackagePrefix);
+                }
 
                 if (!recursively)
                 {
@@ -400,6 +408,63 @@ implements   ClassVisitor,
 
     }
 
+    private class PackageNameFixer
+    implements    ClassVisitor
+    {
+        @Override
+        public void visitAnyClass(Clazz clazz) { }
+
+
+        @Override
+        public void visitProgramClass(ProgramClass programClass)
+        {
+            String newClassName = newClassName(programClass);
+            if (newClassName == null) {
+                return;
+            }
+            if (programClass.getName().equals(newClassName)) {
+                // Remember not to use this name.
+                classNamesToAvoid.add(mixedCaseClassName(newClassName));
+                return;
+            }
+            
+            final String originalPackagePrefix = ClassUtil.internalPackagePrefix(programClass.getName());
+            final String mappedPackagePrefix = (String) packagePrefixMap.get(originalPackagePrefix);
+            final String fixedClassName = mappedPackagePrefix + ClassUtil.internalShortClassName(newClassName);
+            if (!classNamesToAvoid.contains(fixedClassName)) {
+                setNewClassName(programClass, fixedClassName);
+                classNamesToAvoid.add(mixedCaseClassName(fixedClassName));
+            } else {
+                // Clear applied class name, let ClassObfuscator assign a new one for it soon.
+                setNewClassName(programClass, null);
+            }
+        }
+
+
+        public void visitLibraryClass(LibraryClass libraryClass)
+        {
+            String newClassName = newClassName(libraryClass);
+            if (newClassName == null) {
+                return;
+            }
+            if (libraryClass.getName().equals(newClassName)) {
+                // Remember not to use this name.
+                classNamesToAvoid.add(mixedCaseClassName(newClassName));
+                return;
+            }
+
+            final String originalPackagePrefix = ClassUtil.internalPackagePrefix(libraryClass.getName());
+            final String mappedPackagePrefix = (String) packagePrefixMap.get(originalPackagePrefix);
+            final String fixedClassName = mappedPackagePrefix + ClassUtil.internalShortClassName(newClassName);
+            if (!classNamesToAvoid.contains(fixedClassName)) {
+                setNewClassName(libraryClass, fixedClassName);
+                classNamesToAvoid.add(mixedCaseClassName(fixedClassName));
+            } else {
+                // Clear applied class name, let ClassObfuscator assign a new one for it soon.
+                setNewClassName(libraryClass, null);
+            }
+        }
+    }
 
     // Small utility methods.
 
