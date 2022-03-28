@@ -131,6 +131,13 @@ public class Configuration
      */
     public File                         printUsage;
 
+
+    /**
+     * An optional output file for listing the shrink arguments value class
+     * members. An empty file name means the standard output.
+     */
+    public File                         printArgumentsValueRemovalMapping;
+
     /**
      * A list of {@link ClassSpecification} instances, for which an explanation
      * is to be printed, why they are kept in the shrinking step.

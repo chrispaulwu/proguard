@@ -52,8 +52,9 @@ public class ConfigurationConstants
     public static final String ALLOW_OBFUSCATION_SUBOPTION           = "allowobfuscation";
     public static final String PRINT_SEEDS_OPTION                    = "-printseeds";
 
-    public static final String DONT_SHRINK_OPTION         = "-dontshrink";
-    public static final String PRINT_USAGE_OPTION         = "-printusage";
+    public static final String DONT_SHRINK_OPTION                     = "-dontshrink";
+    public static final String PRINT_USAGE_OPTION                     = "-printusage";
+    public static final String PRINT_ARGUMENTS_REMOVAL_OPTION         = "-printArgumentsValueRemovalMapping";
     public static final String WHY_ARE_YOU_KEEPING_OPTION = "-whyareyoukeeping";
 
     public static final String DONT_OPTIMIZE_OPTION                    = "-dontoptimize";

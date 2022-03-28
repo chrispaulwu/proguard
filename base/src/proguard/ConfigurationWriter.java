@@ -107,6 +107,7 @@ public class ConfigurationWriter
 
         writeOption(ConfigurationConstants.DONT_SHRINK_OPTION, !configuration.shrink);
         writeOption(ConfigurationConstants.PRINT_USAGE_OPTION, configuration.printUsage);
+        writeOption(ConfigurationConstants.PRINT_ARGUMENTS_REMOVAL_OPTION, configuration.printArgumentsValueRemovalMapping);
 
         writeOption(ConfigurationConstants.DONT_OPTIMIZE_OPTION,                 !configuration.optimize);
         writeOption(ConfigurationConstants.OPTIMIZATIONS,                        configuration.optimizations);

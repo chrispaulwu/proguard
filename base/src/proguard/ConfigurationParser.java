@@ -178,6 +178,7 @@ public class ConfigurationParser
 
             else if (ConfigurationConstants.DONT_SHRINK_OPTION                               .startsWith(nextWord)) configuration.shrink                                = parseNoArgument(false);
             else if (ConfigurationConstants.PRINT_USAGE_OPTION                               .startsWith(nextWord)) configuration.printUsage                            = parseOptionalFile();
+            else if (ConfigurationConstants.PRINT_ARGUMENTS_REMOVAL_OPTION                   .startsWith(nextWord)) configuration.printArgumentsValueRemovalMapping     = parseOptionalFile();
             else if (ConfigurationConstants.WHY_ARE_YOU_KEEPING_OPTION                       .startsWith(nextWord)) configuration.whyAreYouKeeping                      = parseClassSpecificationArguments(configuration.whyAreYouKeeping);
 
             else if (ConfigurationConstants.DONT_OPTIMIZE_OPTION                             .startsWith(nextWord)) configuration.optimize                              = parseNoArgument(false);

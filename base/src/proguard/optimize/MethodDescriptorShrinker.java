@@ -20,6 +20,8 @@
  */
 package proguard.optimize;
 
+import java.io.PrintWriter;
+
 import proguard.classfile.*;
 import proguard.classfile.attribute.*;
 import proguard.classfile.attribute.annotation.*;
@@ -51,7 +53,6 @@ implements   MemberVisitor,
 
 
     private final MemberVisitor extraMemberVisitor;
-
 
     /**
      * Creates a new MethodDescriptorShrinker.
@@ -109,6 +110,8 @@ implements   MemberVisitor,
             {
                 programMethod.u2nameIndex =
                     constantPoolEditor.addUtf8Constant(newName);
+
+                programMethod.processingExtraInfo = name + "," + descriptor;
             }
 
             // Update the referenced classes.

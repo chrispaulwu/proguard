@@ -583,6 +583,32 @@ public class Obfuscator
             }
         }
 
+        // Print out the shrink arguments mapping, if requested.
+        if (configuration.printArgumentsValueRemovalMapping != null)
+        {
+            if (configuration.verbose)
+            {
+                out.println("Printing extra[arguments] mapping to [" +
+                        PrintWriterUtil.fileName(configuration.printArgumentsValueRemovalMapping) +
+                        "]...");
+            }
+
+            PrintWriter mappingExtraWriter =
+                    PrintWriterUtil.createPrintWriter(configuration.printArgumentsValueRemovalMapping, out);
+
+            try
+            {
+                // Print out items that will be renamed.
+                programClassPool.classesAcceptAlphabetically(
+                        new MappingExtraPrinter(mappingExtraWriter));
+            }
+            finally
+            {
+                PrintWriterUtil.closePrintWriter(configuration.printArgumentsValueRemovalMapping,
+                        mappingExtraWriter);
+            }
+        }
+
         if (configuration.addConfigurationDebugging)
         {
             programClassPool.classesAccept(new RenamedFlagSetter());
